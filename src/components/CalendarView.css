@@ -1,0 +1,11 @@
+.rbc-event {
+  background-color: #9f7aea !important; /* بنفش متوسط */
+  border: none !important;
+  color: white !important;
+}
+
+.rbc-month-view,
+.rbc-time-view {
+  background-color: transparent !important;
+}
+
