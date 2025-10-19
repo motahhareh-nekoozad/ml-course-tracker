@@ -56,6 +56,21 @@ function ProgressTabs({ videos, currentUserId, partnerId, users, userColors }) {
   // ui colors based on selected user
   const selectedColor = userColors[selectedUserId] || "purple";
 
+  // Fixed: Map color to full Tailwind class for active tabs (avoids purge issues with dynamic classes)
+  const getActiveClass = (color) => {
+    switch (color) {
+      case "yellow":
+        return "bg-yellow-500";
+      case "purple":
+        return "bg-purple-500";
+      default:
+        return "bg-purple-500";
+    }
+  };
+
+  // Fixed: For Partner tab color
+  const partnerActiveClass = getActiveClass(userColors[partnerId] || "purple");
+
   return (
     <div className="mt-6">
       {/*select User Tab(Me / Partner) */}
@@ -63,7 +78,7 @@ function ProgressTabs({ videos, currentUserId, partnerId, users, userColors }) {
         <button
           className={`px-4 py-2 rounded ${
             selectedUserId === currentUserId
-              ? `bg-${selectedColor}-500 text-white`
+              ? `${getActiveClass(selectedColor)} text-white` // Fixed: Use full class
               : "bg-gray-300 dark:bg-gray-600"
           }`}
           onClick={() => setSelectedUserId(currentUserId)}
@@ -73,7 +88,7 @@ function ProgressTabs({ videos, currentUserId, partnerId, users, userColors }) {
         <button
           className={`px-4 py-2 rounded ${
             selectedUserId === partnerId
-              ? `bg-${userColors[partnerId]}-500 text-white`
+              ? `${partnerActiveClass} text-white` // Fixed: Use full class for partner
               : "bg-gray-300 dark:bg-gray-600"
           }`}
           onClick={() => setSelectedUserId(partnerId)}
@@ -88,7 +103,7 @@ function ProgressTabs({ videos, currentUserId, partnerId, users, userColors }) {
         <button
           className={`px-4 py-2 rounded ${
             activeTab === "done"
-              ? `bg-${selectedColor}-500 text-white`
+              ? `${getActiveClass(selectedColor)} text-white` // Fixed: Use full class
               : "bg-gray-200 dark:bg-gray-700"
           }`}
           onClick={() => setActiveTab("done")}
@@ -98,7 +113,7 @@ function ProgressTabs({ videos, currentUserId, partnerId, users, userColors }) {
         <button
           className={`px-4 py-2 rounded ${
             activeTab === "notDone"
-              ? `bg-${selectedColor}-500 text-white`
+              ? `${getActiveClass(selectedColor)} text-white` // Fixed: Use full class
               : "bg-gray-200 dark:bg-gray-700"
           }`}
           onClick={() => setActiveTab("notDone")}
@@ -108,7 +123,7 @@ function ProgressTabs({ videos, currentUserId, partnerId, users, userColors }) {
         <button
           className={`px-4 py-2 rounded ${
             activeTab === "progress"
-              ? `bg-${selectedColor}-500 text-white`
+              ? `${getActiveClass(selectedColor)} text-white` // Fixed: Use full class
               : "bg-gray-200 dark:bg-gray-700"
           }`}
           onClick={() => setActiveTab("progress")}
