@@ -17,14 +17,19 @@ function VideoItem({ video, userId, currentUserId, color, done, onToggle }) {
     color === "yellow" ? "accent-yellow-500" : "accent-purple-500";
 
   // New: Map for hover classes (avoids purge issues)
-  const getHoverClass = (color) => {
+  const getHoverClass = (color ,userId , currentUserId) => {
     if (color === "yellow") {
       return "hover:bg-yellow-300 dark:hover:bg-yellow-700"; // Full static classes for yellow
     } else if (color === "purple") {
       return "hover:bg-purple-300 dark:hover:bg-purple-900"; // For purple
     }
     return "hover:bg-gray-100 dark:hover:bg-gray-700"; // Default
+  };  
+  const getCursorPointer = (userId, currentUserId) => {
+    return userId === currentUserId ? "cursor-pointer" : "cursor-default";
   };
+
+  const cursorClass = getCursorPointer(userId, currentUserId);
 
   const hoverClass = getHoverClass(color || "purple"); // Use color prop for hover
 
@@ -35,7 +40,7 @@ function VideoItem({ video, userId, currentUserId, color, done, onToggle }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.25 }}
-      className={`p-4 border rounded-lg mb-2 shadow ${bgColor} cursor-pointer ${hoverClass}`}
+      className={`p-4 border rounded-lg mb-2 shadow ${bgColor} ${cursorClass} ${hoverClass}`}
     >
       <div onClick={handleChange} className="flex justify-between items-center">
         <div>

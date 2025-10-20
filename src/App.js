@@ -18,12 +18,18 @@ function App() {
     if (savedUser) setUserId(savedUser);
   }, []);
 
-  const handleLogin = () => {
-    if (!tempName.trim()) return alert("Please enter your name");
-    localStorage.setItem("ml_user", tempName.trim());
-    setUserId(tempName.trim());
+const handleLogin = () => {
+    const trimmedName = tempName.trim();
+    if (!trimmedName) return alert("Please enter your name");
+    
+    // Added: Check if the name is one of the allowed users
+    if (!users.includes(trimmedName.toLowerCase())) {  // toLowerCase for case-insensitive matching
+      return alert("Only users 'mahan' or 'jojo' are allowed to log in. Please enter your valid name my little girl :)❤️");
+    }
+    
+    localStorage.setItem("ml_user", trimmedName.toLowerCase());  // Store in lowercase for consistency
+    setUserId(trimmedName.toLowerCase());
   };
-
   const handleLogout = () => {
     localStorage.removeItem("ml_user");
     setUserId("");
