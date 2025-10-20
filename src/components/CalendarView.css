@@ -9,3 +9,30 @@
   background-color: transparent !important;
 }
 
+
+
+.dark .rbc-today {
+  background-color: #374151 !important; /* Darker blue for dark mode */
+  color: #f9fafb !important; /* Light text */
+}
+
+/* Fix for off-range days (previous/next month cells): Make them visible but dimmed */
+
+
+.dark .rbc-day-bg.rbc-off-range-bg,
+.dark .rbc-other-month {
+  background-color: #374151 !important; /* Dark gray for dark mode */
+  color: #d1d5db !important; /* Light muted text */
+  opacity: 0.7; /* Keep disabled but visible */
+}
+
+/* Optional: Hover for off-range days */
+.rbc-day-bg.rbc-off-range-bg:hover,
+.rbc-other-month:hover {
+  background-color: #e5e7eb !important; /* Hover in light */
+}
+
+.dark .rbc-day-bg.rbc-off-range-bg:hover,
+.dark .rbc-other-month:hover {
+  background-color: #4b5563 !important; /* Hover in dark */
+}

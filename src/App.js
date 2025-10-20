@@ -89,6 +89,7 @@ function App() {
           events={courseData}
           users={users}
           userColors={userColors}
+          darkMode={darkMode}
         />
 
         {/* Progress Tabs */}

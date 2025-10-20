@@ -16,7 +16,7 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-function CalendarView({ events, users, userColors }) { // fix: receive users and userColors as props
+function CalendarView({ events, users, userColors ,darkMode }) { // fix: receive users and userColors as props
   const [allUserStatus, setAllUserStatus] = useState({});
 
   useEffect(() => {
@@ -52,7 +52,7 @@ function CalendarView({ events, users, userColors }) { // fix: receive users and
     const statuses = allUserStatus[event.title] || {}; // latest statuses for this event
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
-        <strong>{event.title}</strong>
+        <strong style={{fontSize:'12px', textWrap:true}}>{event.title}</strong>
         <div style={{ display: "flex", marginTop: 2 }}>
           {/* fix: use userColor*/}
           {Object.entries(statuses).map(([userId, done]) => (
@@ -75,13 +75,13 @@ function CalendarView({ events, users, userColors }) { // fix: receive users and
   };
 
   return (
-    <div className="my-6">
+    <div className={`my-6 ${darkMode ? 'dark' : ''}`}>
       <Calendar
         localizer={localizer}
         events={formattedEvents}
         startAccessor="start"
         endAccessor="end"
-        style={{ height: 500 }}
+        style={{ height: 700 }}
         components={{ event: EventComponent }}
       />
     </div>

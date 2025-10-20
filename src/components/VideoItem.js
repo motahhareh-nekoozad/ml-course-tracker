@@ -13,7 +13,20 @@ function VideoItem({ video, userId, currentUserId, color, done, onToggle }) {
       : "bg-purple-400 dark:bg-purple-600"
     : "bg-white dark:bg-gray-800";
 
-    const accentColor = color === "yellow" ? "accent-yellow-500" : "accent-purple-500";
+  const accentColor =
+    color === "yellow" ? "accent-yellow-500" : "accent-purple-500";
+
+  // New: Map for hover classes (avoids purge issues)
+  const getHoverClass = (color) => {
+    if (color === "yellow") {
+      return "hover:bg-yellow-300 dark:hover:bg-yellow-700"; // Full static classes for yellow
+    } else if (color === "purple") {
+      return "hover:bg-purple-300 dark:hover:bg-purple-900"; // For purple
+    }
+    return "hover:bg-gray-100 dark:hover:bg-gray-700"; // Default
+  };
+
+  const hoverClass = getHoverClass(color || "purple"); // Use color prop for hover
 
   return (
     <motion.div
@@ -22,12 +35,9 @@ function VideoItem({ video, userId, currentUserId, color, done, onToggle }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 10 }}
       transition={{ duration: 0.25 }}
-      className={`p-4 border rounded-lg mb-2 shadow ${bgColor}`}
+      className={`p-4 border rounded-lg mb-2 shadow ${bgColor} cursor-pointer ${hoverClass}`}
     >
-      <div
-        onClick={handleChange}
-        className="flex justify-between items-center"
-      >
+      <div onClick={handleChange} className="flex justify-between items-center">
         <div>
           <span className="font-bold text-lg">{video.title}</span>
           <p className="text-sm">{video.day}</p>
