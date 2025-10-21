@@ -21,10 +21,6 @@ function ProgressTabs({ videos, currentUserId, partnerId, users, userColors }) {
   const [page, setPage] = useState(1);
   const itemsPerPage = 20;
 
-  // Accumulated displayed videos for done/notDone
-  const [displayedDone, setDisplayedDone] = useState([]);
-  const [displayedNotDone, setDisplayedNotDone] = useState([]);
-
   const dropdownRef = useRef(null); // For closing dropdown on outside click
 
   const tags = [
@@ -87,8 +83,6 @@ function ProgressTabs({ videos, currentUserId, partnerId, users, userColors }) {
     if (selectedUserId) {
       fetchStatus(selectedUserId);
       setPage(1);
-      setDisplayedDone([]);
-      setDisplayedNotDone([]);
     }
   }, [videos, selectedUserId]);
 
@@ -129,33 +123,21 @@ function ProgressTabs({ videos, currentUserId, partnerId, users, userColors }) {
     return filtered;
   }, [videos, videoStatuses, selectedTag]);
 
-  // Load initial batch or more
-  const loadBatch = (allVideos, setDisplayed, isInitial = false) => {
-    const startIndex = isInitial
-      ? 0
-      : displayedDone.length || displayedNotDone.length; // Use current length for append
-    const endIndex = startIndex + itemsPerPage;
-    const nextBatch = allVideos.slice(startIndex, endIndex);
-    setDisplayed((prev) => [...prev, ...nextBatch]);
-    if (!isInitial) {
-      setPage(page + 1);
-    }
-  };
+  // Memoized displayed videos based on pagination (replaces state-based append)
+  const displayedDoneVideos = useMemo(() => {
+    return filteredDoneVideos.slice(0, page * itemsPerPage);
+  }, [filteredDoneVideos, page]);
+
+  const displayedNotDoneVideos = useMemo(() => {
+    return filteredNotDoneVideos.slice(0, page * itemsPerPage);
+  }, [filteredNotDoneVideos, page]);
 
   // Has more check
   const hasMore = useMemo(() => {
-    const currentVideos =
+    const currentFiltered =
       activeTab === "done" ? filteredDoneVideos : filteredNotDoneVideos;
-    const currentDisplayed =
-      activeTab === "done" ? displayedDone : displayedNotDone;
-    return currentDisplayed.length < currentVideos.length;
-  }, [
-    activeTab,
-    filteredDoneVideos,
-    filteredNotDoneVideos,
-    displayedDone,
-    displayedNotDone,
-  ]);
+    return page * itemsPerPage < currentFiltered.length;
+  }, [activeTab, filteredDoneVideos, filteredNotDoneVideos, page]);
 
   const selectedColor = userColors[selectedUserId] || "purple";
 
@@ -223,60 +205,32 @@ function ProgressTabs({ videos, currentUserId, partnerId, users, userColors }) {
   };
 
   const handleLoadMore = () => {
-    if (activeTab === "done") {
-      loadBatch(filteredDoneVideos, setDisplayedDone, false);
-    } else if (activeTab === "notDone") {
-      loadBatch(filteredNotDoneVideos, setDisplayedNotDone, false);
-    }
+    setPage((prev) => prev + 1);
   };
 
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
     setPage(1);
-    // Reset displayed for new tab
-    if (newTab === "done") {
-      setDisplayedNotDone([]);
-    } else if (newTab === "notDone") {
-      setDisplayedDone([]);
-    }
   };
 
-  // Reset displayed and set loading when tag changes
+  // Reset page and set loading when tag changes
   useEffect(() => {
     if (activeTab !== "progress") {
       setIsFiltering(true);
       setPage(1);
-      if (activeTab === "done") {
-        setDisplayedDone([]);
-      } else if (activeTab === "notDone") {
-        setDisplayedNotDone([]);
-      }
     }
   }, [selectedTag, activeTab]);
 
-  // Initial load for current tab when statuses change or tag/tab changes
+  // Reset filtering after a short delay to simulate loading (since updates are instant now)
   useEffect(() => {
-    if (
-      Object.keys(videoStatuses).length > 0 &&
-      activeTab !== "progress" &&
-      isFiltering // 👈 Simplified: trigger only on isFiltering (not on displayed.length)
-    ) {
-      // After statuses loaded and not loading
-      if (activeTab === "done" && displayedDone.length === 0) {
-        // 👈 Keep this for safety
-        loadBatch(filteredDoneVideos, setDisplayedDone, true);
-      } else if (activeTab === "notDone" && displayedNotDone.length === 0) {
-        loadBatch(filteredNotDoneVideos, setDisplayedNotDone, true);
-      }
-      setIsFiltering(false); // Reset loading after load
+    if (isFiltering && activeTab !== "progress") {
+      const timer = setTimeout(() => {
+        setIsFiltering(false);
+      }, 100); // Short delay for visual feedback
+      return () => clearTimeout(timer);
     }
-  }, [
-    activeTab,
-    videoStatuses,
-    filteredDoneVideos,
-    filteredNotDoneVideos,
-    isFiltering, // 👈 This triggers the load on filter change
-  ]);
+  }, [isFiltering, activeTab]);
+
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -478,31 +432,49 @@ function ProgressTabs({ videos, currentUserId, partnerId, users, userColors }) {
             >
               {isLoading || isFiltering ? (
                 <LoadingSpinner />
-              ) : displayedDone.length === 0 && !hasMore ? (
+              ) : displayedDoneVideos.length === 0 ? (
                 <p className="text-center text-gray-500 dark:text-gray-400 py-8">
                   No completed videos{" "}
                   {selectedTag !== "All" ? `for "${selectedTag}"` : ""}.
                 </p>
               ) : (
                 <div>
-                  {displayedDone.map((v) => (
-                    <VideoItem
-                      key={v.title}
-                      video={v}
-                      userId={selectedUserId}
-                      currentUserId={currentUserId}
-                      color={userColors[selectedUserId]}
-                      done={videoStatuses[v.title] ?? false}
-                      onToggle={() => toggleDone(v.title)}
-                    />
-                  ))}
+                  <AnimatePresence>
+                    {displayedDoneVideos.map((v) => (
+                      <motion.div
+                        key={v.title}
+                        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ 
+                          opacity: 0, 
+                          y: -10, 
+                          scale: 0.95,
+                          transition: { duration: 0.2, ease: "easeInOut" }
+                        }}
+                        transition={{ 
+                          duration: 0.25, 
+                          ease: "easeOut" 
+                        }}
+                        className="mb-2"
+                      >
+                        <VideoItem
+                          video={v}
+                          userId={selectedUserId}
+                          currentUserId={currentUserId}
+                          color={userColors[selectedUserId]}
+                          done={videoStatuses[v.title] ?? false}
+                          onToggle={() => toggleDone(v.title)}
+                        />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                   {hasMore && (
                     <button
                       onClick={handleLoadMore}
                       className="w-full py-2 bg-gray-200 dark:bg-gray-700 rounded mt-2 hover:bg-gray-300 dark:hover:bg-gray-600"
                     >
                       Load More (
-                      {filteredDoneVideos.length - displayedDone.length}{" "}
+                      {filteredDoneVideos.length - displayedDoneVideos.length}{" "}
                       remaining)
                     </button>
                   )}
@@ -521,31 +493,49 @@ function ProgressTabs({ videos, currentUserId, partnerId, users, userColors }) {
             >
               {isLoading || isFiltering ? (
                 <LoadingSpinner />
-              ) : displayedNotDone.length === 0 && !hasMore ? (
+              ) : displayedNotDoneVideos.length === 0 ? (
                 <p className="text-center text-gray-500 dark:text-gray-400 py-8">
                   No incomplete videos{" "}
                   {selectedTag !== "All" ? `for "${selectedTag}"` : ""}.
                 </p>
               ) : (
                 <div>
-                  {displayedNotDone.map((v) => (
-                    <VideoItem
-                      key={v.title}
-                      video={v}
-                      userId={selectedUserId}
-                      currentUserId={currentUserId}
-                      color={userColors[selectedUserId]}
-                      done={videoStatuses[v.title] ?? false}
-                      onToggle={() => toggleDone(v.title)}
-                    />
-                  ))}
+                  <AnimatePresence>
+                    {displayedNotDoneVideos.map((v) => (
+                      <motion.div
+                        key={v.title}
+                        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ 
+                          opacity: 0, 
+                          y: -10, 
+                          scale: 0.95,
+                          transition: { duration: 0.2, ease: "easeInOut" }
+                        }}
+                        transition={{ 
+                          duration: 0.25, 
+                          ease: "easeOut" 
+                        }}
+                        className="mb-2"
+                      >
+                        <VideoItem
+                          video={v}
+                          userId={selectedUserId}
+                          currentUserId={currentUserId}
+                          color={userColors[selectedUserId]}
+                          done={videoStatuses[v.title] ?? false}
+                          onToggle={() => toggleDone(v.title)}
+                        />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                   {hasMore && (
                     <button
                       onClick={handleLoadMore}
                       className="w-full py-2 bg-gray-200 dark:bg-gray-700 rounded mt-2 hover:bg-gray-300 dark:hover:bg-gray-600"
                     >
                       Load More (
-                      {filteredNotDoneVideos.length - displayedNotDone.length}{" "}
+                      {filteredNotDoneVideos.length - displayedNotDoneVideos.length}{" "}
                       remaining)
                     </button>
                   )}
