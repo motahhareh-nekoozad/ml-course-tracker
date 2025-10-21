@@ -600,7 +600,7 @@ function ProgressTabs({ videos, currentUserId, partnerId, users, userColors }) {
                     style={{
                       width: `${percent}%`,
                       backgroundColor:
-                        selectedColor === "yellow" ? "#eab308" : "#a855f7",
+                        selectedColor === "yellow" ? "yellow" : "purple",
                     }}
                   ></div>
                 </div>
